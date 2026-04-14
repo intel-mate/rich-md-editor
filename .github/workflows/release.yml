@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write   # needed to create GitHub Releases
+
+jobs:
+  release:
+    name: Build, publish, release
+    runs-on: ubuntu-latest
+    # Promote secrets to env at the job level so steps can conditionally run
+    # based on whether the token exists (GitHub doesn't let `if:` read secrets
+    # directly, but it can read env).
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Verify tag matches package.json version
+        id: version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "Tag version : $TAG_VERSION"
+          echo "Package ver : $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+          echo "vsix=rich-markdown-editor-${TAG_VERSION}.vsix" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle webview assets
+        run: npm run build:webview
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Package VSIX
+        run: npx vsce package --no-dependencies --out "${{ steps.version.outputs.vsix }}"
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rich-markdown-editor-${{ steps.version.outputs.version }}
+          path: ${{ steps.version.outputs.vsix }}
+          if-no-files-found: error
+
+      # --- GitHub Release ---
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.version.outputs.vsix }}
+          name: Rich Markdown Editor ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+      # --- VS Code Marketplace ---
+      # Requires a repo secret: VSCE_PAT (Azure DevOps Personal Access Token
+      # with Marketplace > Manage). Skipped if the secret is not set.
+      - name: Publish to VS Code Marketplace
+        if: ${{ env.VSCE_PAT != '' }}
+        run: npx vsce publish --no-dependencies --packagePath "${{ steps.version.outputs.vsix }}"
+
+      # --- Open VSX Registry ---
+      # Requires a repo secret: OVSX_PAT (https://open-vsx.org/user-settings/tokens).
+      # Skipped if the secret is not set.
+      - name: Publish to Open VSX
+        if: ${{ env.OVSX_PAT != '' }}
+        run: npx ovsx publish "${{ steps.version.outputs.vsix }}" --no-dependencies -p "$OVSX_PAT"
