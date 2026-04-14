@@ -3,7 +3,7 @@
   "displayName": "Rich Markdown Editor",
   "description": "Preview and edit Markdown files inline with a rich WYSIWYG editor (Toast UI) including toolbar, tables, and image attachments.",
   "version": "0.1.0",
-  "publisher": "local",
+  "publisher": "AnbuThangarathinam",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,7 +16,8 @@
     "vscode": "^1.75.0"
   },
   "categories": [
-    "Visualization", "Other"
+    "Visualization",
+    "Other"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
@@ -92,7 +93,7 @@
     "typescript": "^5.3.0"
   },
   "dependencies": {
-    "@toast-ui/editor": "^3.2.2",
+    "@toast-ui/editor": "^3.1.0",
     "@toast-ui/editor-plugin-code-syntax-highlight": "^3.1.0",
     "prismjs": "^1.30.0"
   }
