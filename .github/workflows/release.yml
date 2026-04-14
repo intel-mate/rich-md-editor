@@ -20,12 +20,12 @@ jobs:
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Verify tag matches package.json version
@@ -55,7 +55,7 @@ jobs:
         run: npx vsce package --no-dependencies --out "${{ steps.version.outputs.vsix }}"
 
       - name: Upload VSIX artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rich-markdown-editor-${{ steps.version.outputs.version }}
           path: ${{ steps.version.outputs.vsix }}
