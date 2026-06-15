@@ -2,7 +2,7 @@
   "name": "rich-markdown-editor",
   "displayName": "Rich Markdown Editor",
   "description": "Preview and edit Markdown files inline with a rich WYSIWYG editor (Toast UI) including toolbar, tables, and image attachments.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "AnbuThangarathinam",
   "license": "MIT",
   "repository": {
